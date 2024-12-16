@@ -64,16 +64,16 @@ module.exports.getAllPostsCtrl = asyncHandler(async (req, res) => {
   const { pageNumber, category } = req.query;
   let posts;
 
-  if (pageNumber) {
+  if (pageNumber) { // لو المستخدم مرر كويري نامبر بيدج هيرجع الداتا حسب الصفحه زي ما عارفين
     posts = await Post.find()
       .skip((pageNumber - 1) * POST_PER_PAGE)
       .limit(POST_PER_PAGE)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1 }) // دا علشان يرجع الداتا من الجديد للقديم
       .populate("user", ["-password"]);
-  } else if (category) {
+  } else if (category) { // ولو بعت كاتيجوري بدل البيدج نمبر هيرجع الداتا الي الكاتيجوري بتاعها متوافق مع الي هيجلها من الكويري
     posts = await Post.find({ category })
-      .sort({ createdAt: -1 })
-      .populate("user", ["-password"]);
+      .sort({ createdAt: -1 }) // يرجع الداتا من الجديد الي القديم
+      .populate("user", ["-password"]); // هياخد الايدي بتاع اليوزر الي هيتخزن ويجيب كل معلوماتو عدا الباسورد
   } else {
     posts = await Post.find()
       .sort({ createdAt: -1 })
@@ -91,7 +91,7 @@ module.exports.getAllPostsCtrl = asyncHandler(async (req, res) => {
 module.exports.getSinglePostCtrl = asyncHandler(async (req, res) => {
   const post = await Post.findById(req.params.id)
   .populate("user", ["-password"])
-  .populate("comments");
+  .populate("comments"); // علشان يجيب الكومنتات الخاصه بالبوست
   
   if (!post) {
     return res.status(404).json({ message: "post not found" });
@@ -107,7 +107,7 @@ module.exports.getSinglePostCtrl = asyncHandler(async (req, res) => {
  * @access  public
  ------------------------------------------------*/
 module.exports.getPostCountCtrl = asyncHandler(async (req, res) => {
-  const count = await Post.count();
+  const count = await Post.count(); //عدد البوستات الي موجوده
   res.status(200).json(count);
 });
 
@@ -123,12 +123,13 @@ module.exports.deletePostCtrl = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "post not found" });
   }
 
-  if (req.user.isAdmin || req.user.id === post.user.toString()) {
-    await Post.findByIdAndDelete(req.params.id);
-    await cloudinaryRemoveImage(post.image.publicId);
+  if (req.user.isAdmin || req.user.id === post.user.toString()) { // بيعمل شيك علي اليوزر هو ولا لا عن طريق يقارن الايدي الي جالو بالايدي بتاع اليوزر
+    //  وبما ان اليوزر الي في البوست اوبجيكت بنحولو الي نص
+    await Post.findByIdAndDelete(req.params.id); // يبحث عن البوست من الايدي ويحذفو
+    await cloudinaryRemoveImage(post.image.publicId); // يحذف الصوره من الفاير بيز
 
     // Delete all comments that belong to this post
-    await Comment.deleteMany({ postId: post._id });
+    await Comment.deleteMany({ postId: post._id }); // يحذف كل  التعليقات الي علي البوست
 
     res.status(200).json({
       message: "post has been deleted successfully",
@@ -159,15 +160,12 @@ module.exports.updatePostCtrl = asyncHandler(async (req, res) => {
   }
 
   // 3. check if this post belong to logged in user
-  if (req.user.id !== post.user.toString()) {
-    return res
-      .status(403)
-      .json({ message: "access denied, you are not allowed" });
+  if (req.user.id !== post.user.toString()) { // التحقق اذا كان البوست تبع اليوزر دا ولا لا
+    return res.status(403).json({ message: "access denied, you are not allowed" });
   }
 
-  // 4. Update post
-  const updatedPost = await Post.findByIdAndUpdate(
-    req.params.id,
+  // 4. Update post تحديث البوست كلو الا الصوره 
+  const updatedPost = await Post.findByIdAndUpdate( req.params.id,
     {
       $set: {
         title: req.body.title,
@@ -175,8 +173,8 @@ module.exports.updatePostCtrl = asyncHandler(async (req, res) => {
         category: req.body.category,
       },
     },
-    { new: true }
-  ).populate("user", ["-password"])
+    { new: true } // علشان يرحع التعديل الجديد
+  ).populate("user", ["-password"])   // هيجيب معلومات اليوزر كلها عدا الباسورد
   .populate("comments");
 
   // 5. Send response to the client
@@ -244,22 +242,22 @@ module.exports.updatePostImageCtrl = asyncHandler(async (req, res) => {
  ------------------------------------------------*/
 module.exports.toggleLikeCtrl = asyncHandler(async (req, res) => {
   const loggedInUser = req.user.id;
-  const { id: postId } = req.params;
+  const { id: postId } = req.params; //لما نعوذ نغير الاسم  بتاع  اي حاجه في الجافا اسكربت نستوردو باسمو ثم نقطين والاسم الجديد
 
-  let post = await Post.findById(postId);
+  let post = await Post.findById(postId); // يجيب البوست
   if (!post) {
     return res.status(404).json({ message: "post not found" });
   }
 
-  const isPostAlreadyLiked = post.likes.find(
-    (user) => user.toString() === loggedInUser
+  const isPostAlreadyLiked = post.likes.find( // ممكن نعمل فايند علي الاري كمان
+    (user) => user.toString() === loggedInUser  // لو اليوزر ايدي موجود
   );
 
-  if (isPostAlreadyLiked) {
+  if (isPostAlreadyLiked) { // لواليوزر موجود
     post = await Post.findByIdAndUpdate(
       postId,
       {
-        $pull: { likes: loggedInUser },
+        $pull: { likes: loggedInUser }, //البول يقدر يشيل قيمه من الاري 
       },
       { new: true }
     );
@@ -267,7 +265,7 @@ module.exports.toggleLikeCtrl = asyncHandler(async (req, res) => {
     post = await Post.findByIdAndUpdate(
       postId,
       {
-        $push: { likes: loggedInUser },
+        $push: { likes: loggedInUser }, // هيضيف اليوزر لو مش موجوج
       },
       { new: true }
     );

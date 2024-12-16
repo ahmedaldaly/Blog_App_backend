@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Joi = require("joi");
 
 // Post Schema
+// الاسكيما الخاصه بالبوستات 
 const PostSchema = new mongoose.Schema(
   {
     title: {
@@ -18,8 +19,9 @@ const PostSchema = new mongoose.Schema(
       minlength: 10,
     },
     user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.ObjectId, //نوع البيانات ابوجيكت اي دي  بيستخدم لتحديد المستندات من داخل قاعدة البيانات يعني اليوزر هيحتوي 
+      //  علي معرف اي دي من  مستند اخر وهو من اسكيما بتاعت اليوزر
+      ref: "User",// يستخدم للاشاره الي مخطط الاسكيما الي هيجيب منو الداتا
       required: true,
     },
     category: {
@@ -35,23 +37,24 @@ const PostSchema = new mongoose.Schema(
     },
     likes: [
       {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId, //هنا بقي هتاخد بيانات اليوزر الي هيعمل لايك نخزنو في الاري دي
         ref: "User",
       },
     ],
   },
   {
     timestamps: true,
+    // دول علشان الفيرجوال
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
   }
 );
 
 //Populate Comment For This Post
-PostSchema.virtual("comments", {
-  ref: "Comment",
-  foreignField: "postId",
-  localField: "_id"
+PostSchema.virtual("comments", { // عمل فيرجوال للكومينت الخاصه بالبوست يعني  كل ما نرجع البوست هنرجع كومنتاتو معاه
+  ref: "Comment", // المودل الي هنجيب منو الكومنتات
+  foreignField: "postId", // اي دي البوست من الكومنت 
+  localField: "_id" // اي دي البوست من هنا علشان يتقارنو ببعض ويتربط دا بدا
 });
 
 // Post Model

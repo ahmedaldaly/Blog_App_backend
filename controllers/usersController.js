@@ -18,7 +18,7 @@ const { Post } = require("../models/Post");
  * @access  private (only admin)
  ------------------------------------------------*/
 module.exports.getAllUsersCtrl = asyncHandler(async (req, res) => {
-  const users = await User.find().select("-password").populate("posts");
+  const users = await User.find().select("-password").populate("posts"); // البوبيوليت دي علشان يرجع الفيرجوال بوست الي عملناها مع معلومات اليوزر
   res.status(200).json(users);
 });
 
@@ -80,7 +80,7 @@ module.exports.updateUserProfileCtrl = asyncHandler(async (req, res) => {
  * @access  private (only admin)
  ------------------------------------------------*/
 module.exports.getUsersCountCtrl = asyncHandler(async (req, res) => {
-  const count = await User.count();
+  const count = await User.count(); // دالة الكونت دي هتروح تشوف اليوزر فيه كام اوبجكت ويرجعلنا العدد بتاعهتا زي اللنس كدا
   res.status(200).json(count);
 });
 
@@ -89,20 +89,25 @@ module.exports.getUsersCountCtrl = asyncHandler(async (req, res) => {
  * @route   /api/users/profile/profile-photo-upload
  * @method  POST
  * @access  private (only logged in user)
+ * تحميل ضورة بروفايل للمستخدم بيعدل الصوره الافتراضيه
  ------------------------------------------------*/
 module.exports.profilePhotoUploadCtrl = asyncHandler(async (req, res) => {
   // 1. Validation
   if (!req.file) {
     return res.status(400).json({ message: "no file provided" });
   }
-
-  // 2. Get the path to the image
+ 
+  // 2. Get the path to the image 
+  // الباص بتاع الصوره 
   const imagePath = path.join(__dirname, `../images/${req.file.filename}`);
 
   // 3. Upload to cloudinary
+  // علشان يحمل الصوره من الفولدر علي الكلاود الفاير بيز 
+  //  مررنالو الباس بتاع الصوره  الي هتتحط في فولدر الصور
   const result = await cloudinaryUploadImage(imagePath);
 
   // 4. Get the user from DB
+  // يجيب معلومات المستخدم من الداتا بيز
   const user = await User.findById(req.user.id);
 
   // 5. Delete the old profile photo if exist
@@ -140,14 +145,17 @@ module.exports.deleteUserProfileCtrl = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "user not found" });
   }
 
-  // 2. Get all posts from DB
+  // 2. Get all posts from DB 
+  // كل البوست الخاصه باليوزر
   const posts = await Post.find({ user: user._id });
 
   // 3. Get the public ids from the posts
+  // عمل ماب علي البوستات يرحع البابليك اي دي بتاعها كلها
   const publicIds = posts?.map((post) => post.image.publicId);
 
   // 4. Delete all posts image from cloudinary that belong to this user
-  if(publicIds?.length > 0) {
+  if(publicIds?.length > 0) { // لو اكبر من صفر هيمسح كلو الي هيلاقيه
+    
     await cloudinaryRemoveMultipleImage(publicIds);
   }
 

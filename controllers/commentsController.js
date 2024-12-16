@@ -21,6 +21,8 @@ module.exports.createCommentCtrl = asyncHandler(async (req, res) => {
   const profile = await User.findById(req.user.id);
 
   const comment = await Comment.create({
+    //  اي دي البوست الي هنضيفلو التعليق والتعليق واليوزر الي كتب التعليق بيساوي الاي دي  الي جاي من الريكويست من التوكن واليوزر نيم
+    // الداتا بتاع الي كتب التعليق
     postId: req.body.postId,
     text: req.body.text,
     user: req.user.id,
@@ -35,9 +37,10 @@ module.exports.createCommentCtrl = asyncHandler(async (req, res) => {
  * @route   /api/comments
  * @method  GET
  * @access  private (only admin)
+ * استيراد الكومنتات كلها للادمن
  ------------------------------------------------*/
 module.exports.getAllCommentsCtrl = asyncHandler(async (req, res) => {
-  const comments = await Comment.find().populate("user");
+  const comments = await Comment.find().populate("user"); // البابيوليت يجبلنا اليوزر الداتا بتاعتو
   res.status(200).json(comments);
 });
 
@@ -46,6 +49,7 @@ module.exports.getAllCommentsCtrl = asyncHandler(async (req, res) => {
  * @route   /api/comments/:id
  * @method  DELETE
  * @access  private (only admin or owner of the comment)
+ * الي كاتب الكومنت والادمن بس الي يمسحو الكومنت
  ------------------------------------------------*/
 module.exports.deleteCommentCtrl = asyncHandler(async (req, res) => {
   const comment = await Comment.findById(req.params.id);
@@ -66,6 +70,7 @@ module.exports.deleteCommentCtrl = asyncHandler(async (req, res) => {
  * @route   /api/comments/:id
  * @method  PUT
  * @access  private (only owner of the comment)
+ * المستخدم الي كاتب التعليق هو بس الي يعدل عليه
  ------------------------------------------------*/
  module.exports.updateCommentCtrl = asyncHandler(async (req, res) => {
   const { error } = validateUpdateComment(req.body);

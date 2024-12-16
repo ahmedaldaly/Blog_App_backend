@@ -48,15 +48,16 @@ const UserSchema = new mongoose.Schema({
     },
 }, {
     timestamps: true, // اضافة تاريخ  اضافة اليوزر واخر تعديل له
+    //  الاتنين دول علشان لاسكيما يتعملها الفيرجوال الي تحتها وتضيف البوستات بتاعتها 
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 });
 
 // Populate Posts That Belongs To This User When he/she Get his/her Profile
-UserSchema.virtual("posts", {
-    ref: "Post",
-    foreignField: "user",
-    localField: "_id",
+UserSchema.virtual("posts", { // دا هيضيف اري في اليوزر اسكيما باسم الي حاطيمو الي هو بوست
+    ref: "Post", // هياخد الداتا من الاسكيما بوست
+    foreignField: "user", // الايدي بتاع الاوبجكت يوزر الي في البوست اسكيما
+    localField: "_id", // دا اللوكل اي دي علشان يقارنهم ببعض
 });
 
 // Generate Auth Token
